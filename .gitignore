@@ -1,0 +1,21 @@
+# Environment variables / secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Database backups
+backups/
+*.sql.backup
+
+# Data exports / temporary files
+*.csv
+*.xlsx
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
