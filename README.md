@@ -17,6 +17,16 @@ AdTrack Intelligence Platform is a portfolio project that simulates a mobile adv
 The project focuses on the type of work performed in advertising analytics teams: event tracking, campaign performance analysis, data quality validation, A/B experiment evaluation, monitoring alerts, and dashboard reporting.
 
 
+## Project Highlights
+
+- Generated 5,000 simulated ad requests and thousands of ad events using Python.
+- Designed a MySQL schema for publishers, apps, advertisers, campaigns, ad requests, raw events, clean events, experiments, reporting metrics, and alerts.
+- Built SQL reporting tables for campaign and app-level KPIs including CTR, install rate, conversion rate, spend, revenue, profit, and eCPM.
+- Implemented a raw-to-clean validation pipeline that rejects invalid tracking events and stores validation errors.
+- Compared two simulated ad delivery algorithms using A/B experiment analysis.
+- Built SQL-based monitoring alerts for negative-profit campaigns, weak CTR, high spend, KPI drops, and experiment tradeoffs.
+- Created a Streamlit dashboard for campaign performance, app/game performance, A/B results, alerts, and validation errors.
+
 
 \## Why I Built This Project
 
