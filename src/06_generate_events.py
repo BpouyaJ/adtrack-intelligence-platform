@@ -86,26 +86,55 @@ def choose_matching_user(campaign, users):
 
 def event_probability_by_variant(variant):
     """
-    Variant B is slightly better than Variant A.
-    This will later help us analyze A/B test performance.
+    Variant B is designed as an optimized delivery algorithm.
+    It creates better engagement and post-install quality than Variant A.
     """
     if variant == "B":
         return {
             "impression": 0.98,
             "click": 0.28,
-            "install": 0.34,
-            "conversion": 0.18,
-            "reward": 0.80,
+            "install": 0.35,
+            "conversion": 0.32,
+            "reward": 0.75,
         }
 
     return {
         "impression": 0.96,
         "click": 0.22,
         "install": 0.28,
-        "conversion": 0.13,
-        "reward": 0.75,
+        "conversion": 0.20,
+        "reward": 0.70,
     }
 
+def generate_conversion_revenue(campaign_id, bid_cpi, variant):
+    """
+    Generates more realistic post-install conversion revenue.
+
+    Some campaigns are high-value and can become profitable.
+    Others remain weaker, creating a realistic mix for analytics.
+    Variant B receives a small quality boost.
+    """
+    high_value_campaigns = {
+        5: (2.0, 5.5),    # CryptoLearn US Android Arcade
+        6: (2.0, 5.5),    # CryptoLearn US iOS Arcade
+        9: (3.0, 7.0),    # TravelBuddy Austria Android Simulation
+        10: (3.0, 7.0),   # TravelBuddy Austria iOS Simulation
+        12: (2.5, 6.5),   # MegaGame US iOS Arcade High Value
+    }
+
+    default_range = (1.3, 3.5)
+
+    low_multiplier, high_multiplier = high_value_campaigns.get(
+        campaign_id,
+        default_range
+    )
+
+    variant_boost = 1.15 if variant == "B" else 1.00
+
+    bid_cpi_float = float(bid_cpi)
+    revenue = bid_cpi_float * random.uniform(low_multiplier, high_multiplier) * variant_boost
+
+    return round(revenue, 2)
 
 def generate_event_id(event_type):
     return f"py_{event_type}_{uuid.uuid4().hex}"
@@ -169,17 +198,40 @@ def insert_raw_event(cursor, event_id, tracking_id, campaign_id, app_id, user_id
 
 def clean_generated_data(cursor):
     """
-    Deletes only Python-generated data.
-    Manual and anomaly test data remain untouched.
+    Deletes only Python-generated data in the correct dependency order.
+
+    Important:
+    events_clean references ad_requests through tracking_id,
+    so clean events must be deleted before generated ad_requests.
     """
     cursor.execute("SET SQL_SAFE_UPDATES = 0")
 
+    # Delete validation errors connected to generated raw events, if they exist.
+    # This prevents foreign key problems when deleting events_raw.
+    cursor.execute("""
+        DELETE eve
+        FROM event_validation_errors eve
+        JOIN events_raw er
+            ON eve.raw_event_id = er.raw_event_id
+        WHERE er.event_id LIKE 'py_%'
+           OR er.tracking_id LIKE 'trk_py_%'
+    """)
+
+    # Delete generated clean events before deleting ad_requests.
+    cursor.execute("""
+        DELETE FROM events_clean
+        WHERE event_id LIKE 'py_%'
+           OR tracking_id LIKE 'trk_py_%'
+    """)
+
+    # Delete generated raw events.
     cursor.execute("""
         DELETE FROM events_raw
         WHERE event_id LIKE 'py_%'
            OR tracking_id LIKE 'trk_py_%'
     """)
 
+    # Now it is safe to delete generated ad requests.
     cursor.execute("""
         DELETE FROM ad_requests
         WHERE tracking_id LIKE 'trk_py_%'
@@ -309,7 +361,7 @@ def main():
                     # Reward after valid install.
                     if random.random() < probs["reward"]:
                         reward_time = install_time + timedelta(seconds=random.randint(5, 60))
-                        reward_cost = round(random.uniform(0.20, 0.80), 2)
+                        reward_cost = round(random.uniform(0.15, 0.45), 2)
 
                         insert_raw_event(
                             cursor,
@@ -330,7 +382,7 @@ def main():
                     # Conversion after install.
                     if random.random() < probs["conversion"]:
                         conversion_time = install_time + timedelta(minutes=random.randint(10, 180))
-                        revenue = round(random.uniform(3.00, 15.00), 2)
+                        revenue = generate_conversion_revenue(campaign_id, bid_cpi, variant)
 
                         insert_raw_event(
                             cursor,
