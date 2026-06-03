@@ -44,27 +44,27 @@ The project follows this workflow:
 
 Raw ad events
 
-&#x20;   ↓
+   ↓
 
 Validation and cleaning
 
-&#x20;   ↓
+   ↓
 
 Clean event table
 
-&#x20;   ↓
+   ↓
 
 Campaign and app reporting metrics
 
-&#x20;   ↓
+   ↓
 
 A/B experiment analysis
 
-&#x20;   ↓
+   ↓
 
 Monitoring alerts
 
-&#x20;   ↓
+   ↓
 
 Streamlit dashboard
 
